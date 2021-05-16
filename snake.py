@@ -35,18 +35,18 @@ clock = pygame.time.Clock()
 
 x = 16
 x_offset = 0
+x_pos_offset = 0
+x_size_offset = 0
+
 y = 10
 y_offset = 0
+y_pos_offset = 0
+y_size_offset = 0
 
 def translate_coords_to_pixels( x, y ):
     x_pos = x * block_size
     y_pos = y * block_size
     return (x_pos, y_pos)
-
-def translate_pixels_to_coords( x_pos, y_pos ):
-    x = math.floor( x_pos / block_size )
-    y = math.floor( y_pos / block_size )
-    return (x, y)
 
 while not game_over:
     for event in pygame.event.get():
@@ -57,20 +57,39 @@ while not game_over:
             if event.key == pygame.K_LEFT:
                 x_offset = -1
                 y_offset = 0
+                x_pos_offset = 1
+                x_size_offset = 1
+                y_pos_offset = 1
+                y_size_offset = -2
             elif event.key == pygame.K_RIGHT:
                 x_offset = 1
                 y_offset = 0
+                x_pos_offset = -1
+                x_size_offset = 0
+                y_pos_offset = 1
+                y_size_offset = -2
             elif event.key == pygame.K_UP:
                 x_offset = 0
                 y_offset = -1
+                x_pos_offset = 1
+                x_size_offset = -2
+                y_pos_offset = 1
+                y_size_offset = 1
             elif event.key == pygame.K_DOWN:
                 x_offset = 0
                 y_offset = 1
+                x_pos_offset = 1
+                x_size_offset = -2
+                y_pos_offset = -1
+                y_size_offset = 0
     
     x += x_offset
     y += y_offset
     (x_pos, y_pos) = translate_coords_to_pixels( x, y )
-    pygame.draw.rect(screen, green, (x_pos, y_pos, block_size, block_size))
+    pygame.draw.rect(screen, green, (x_pos + x_pos_offset,
+                                    y_pos + y_pos_offset,
+                                    block_size + x_size_offset,
+                                    block_size + y_size_offset))
     pygame.display.update()
 
     clock.tick(10)
