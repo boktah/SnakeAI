@@ -14,17 +14,57 @@ def draw_grid():
         for y in range(grid_height):
             block = pygame.Rect(x*block_size, y*block_size, block_size, block_size)
             pygame.draw.rect(screen, grey, block, 1)
-    pygame.display.update()
+    # pygame.display.update()
 
 def draw_snake(snake_list):
+    draw_grid()
+    for i in range(len(snake_list)):
+        (x, y) = snake_list[i]
+        (x_pos, y_pos) = translate_coords_to_pixels( x, y )
+        segment = pygame.Rect(x_pos + 1, y_pos + 1, block_size - 2, block_size - 2)
+        pygame.draw.rect(screen, green, segment)
+
+        if (i + 1) < len(snake_list):
+            (next_x, next_y) = snake_list[i + 1]
+            (next_x_pos, next_y_pos) = translate_coords_to_pixels( next_x, next_y )
+            bridge_x = 0
+            bridge_x_size = 0
+            bridge_y = 0
+            bridge_y_size = 0
+            if next_x == x and next_y < y: # up
+                bridge_x = next_x_pos + 1
+                bridge_x_size = block_size - 2
+                bridge_y = next_y_pos + block_size - 1
+                bridge_y_size = 2
+            elif next_x == x and next_y > y: # down
+                bridge_x = next_x_pos + 1
+                bridge_x_size = block_size - 2
+                bridge_y = y_pos + block_size - 1
+                bridge_y_size = 2
+            elif next_x > x and next_y == y: # right
+                bridge_x = x_pos + block_size - 1
+                bridge_x_size = 2
+                bridge_y = next_y_pos + 1
+                bridge_y_size = block_size - 2
+            elif next_x < x and next_y == y: # left
+                bridge_x = next_x_pos + block_size - 1
+                bridge_x_size = 2
+                bridge_y = next_y_pos + 1
+                bridge_y_size = block_size - 2
+            bridge = pygame.Rect(bridge_x, bridge_y, bridge_x_size, bridge_y_size)
+            pygame.draw.rect(screen, green, bridge)
+
+def fruit_in_snake(fruit_x, fruit_y):
     for pos in snake_list:
         (x, y) = pos
-        pygame.draw.rect(screen, green, )
+        if fruit_x == x or fruit_y == y:
+            return True
+    return False
 
 black = (0, 0, 0)
 grey = (40, 40, 40)
 green = (50, 140, 30)
-red = (140, 50, 30)
+red = (220, 20, 20)
 
 pygame.init()
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -47,6 +87,7 @@ y_size_offset = -2
 game_over = False
 snake_list = [(x,y)]
 snake_len = 1
+direction = 0 # right
 
 def translate_coords_to_pixels( x, y ):
     x_pos = x * block_size
@@ -62,70 +103,63 @@ while not game_over:
         if event.type == pygame.QUIT:
             game_over = True
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                x_offset = -1
-                y_offset = 0
-                x_pos_offset = 1
-                x_size_offset = 0
-                y_pos_offset = 1
-                y_size_offset = -2
-            elif event.key == pygame.K_RIGHT:
-                x_offset = 1
-                y_offset = 0
-                x_pos_offset = -1
-                x_size_offset = 0
-                y_pos_offset = 1
-                y_size_offset = -2
-            elif event.key == pygame.K_UP:
-                x_offset = 0
-                y_offset = -1
-                x_pos_offset = 1
-                x_size_offset = -2
-                y_pos_offset = 1
-                y_size_offset = 1
+            if event.key == pygame.K_RIGHT:
+                direction = 0 if direction != 2 else direction
             elif event.key == pygame.K_DOWN:
-                x_offset = 0
-                y_offset = 1
-                x_pos_offset = 1
-                x_size_offset = -2
-                y_pos_offset = -1
-                y_size_offset = 0
-    
-    old_x = x
-    old_y = y
-    x += x_offset
-    y += y_offset
-
-    snake_list.append((x,y))
+                direction = 1 if direction != 3 else direction
+            elif event.key == pygame.K_LEFT:
+                direction = 2 if direction != 0 else direction
+            elif event.key == pygame.K_UP:
+                direction = 3 if direction != 1 else direction
+        
+        if direction == 0:
+            x_offset = 1
+            y_offset = 0
+        elif direction == 1:
+            x_offset = 0
+            y_offset = 1
+        elif direction == 2:
+            x_offset = -1
+            y_offset = 0
+        elif direction == 3:
+            x_offset = 0
+            y_offset = -1
+            
 
     if x < 0 or x >= grid_width or y < 0 or y >= grid_height:
         game_over = True
 
-    # draw_grid()
+    x += x_offset
+    y += y_offset
+    snake_list.append((x,y))
+
+    if (len(snake_list) > snake_len):
+        del snake_list[0]
+    
+    for pos in snake_list[:-1]:
+        if (pos == (x,y)):
+            game_over = True
+    
+    draw_snake(snake_list)
 
     # draw fruit
     (fruit_x_pos, fruit_y_pos) = translate_coords_to_pixels( fruit_x, fruit_y )
     pygame.draw.rect(screen, red, (fruit_x_pos, fruit_y_pos, block_size, block_size))
 
-    # draw snake segment
-    draw_snake()
-    (x_pos, y_pos) = translate_coords_to_pixels( x, y )
-    segment = pygame.Rect(x_pos + x_pos_offset, y_pos + y_pos_offset, block_size + x_size_offset, block_size + y_size_offset)
-    pygame.draw.rect(screen, green, segment)
+    # (x_pos, y_pos) = translate_coords_to_pixels( x, y )
+    # segment = pygame.Rect(x_pos + x_pos_offset, y_pos + y_pos_offset, block_size + x_size_offset, block_size + y_size_offset)
+    # pygame.draw.rect(screen, green, segment)
 
     pygame.display.update()
     
     if x == fruit_x and y == fruit_y:
         fruit_x = round( random.randrange(0, grid_width) )
         fruit_y = round( random.randrange(0, grid_height) )
+        while fruit_in_snake(fruit_x, fruit_y):
+            fruit_x = round( random.randrange(0, grid_width) )
+            fruit_y = round( random.randrange(0, grid_height) )
         snake_len += 1
-    else:
-        # erase last snake block
-        block = pygame.Rect(x*block_size, y*block_size, block_size, block_size)
-        pygame.draw.rect(screen, black, block, 0)
-        pygame.draw.rect(screen, grey, block, 1)
-
-    print(snake_len)
+        print(snake_len)
 
     clock.tick(10)
         
