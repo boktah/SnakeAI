@@ -2,7 +2,6 @@ import pygame
 import math
 import random
 from time import sleep
-from pathfinding import a_star
 from collections import deque
 from queue import PriorityQueue
 
@@ -110,7 +109,7 @@ def draw_snake(snake_list):
 def fruit_in_snake(fruit_x, fruit_y):
     for pos in snake_list:
         (x, y) = pos
-        if fruit_x == x or fruit_y == y:
+        if fruit_x == x and fruit_y == y:
             return True
     return False
 
@@ -184,10 +183,11 @@ def translate_coords_to_pixels( x, y ):
 fruit_x = round( random.randrange(0, grid_width) )
 fruit_y = round( random.randrange(0, grid_height) )
 
-moveList = a_star( (x,y), (fruit_x, fruit_y) )
-print(moveList)
+# moveList = a_star( (x,y), (fruit_x, fruit_y) )
+# print(moveList)
 
 while not game_over:
+    moveList = a_star( (x,y), (fruit_x, fruit_y) )
     direction = calculate_direction( (x,y), moveList )
 
     for event in pygame.event.get():
@@ -251,7 +251,7 @@ while not game_over:
         moveList = a_star( (x,y), (fruit_x, fruit_y) )
 
     # sleep(1000)
-    clock.tick(5)
+    clock.tick(60)
 
 
 pygame.display.quit()
